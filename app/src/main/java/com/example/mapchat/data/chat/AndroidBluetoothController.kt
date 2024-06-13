@@ -1,9 +1,8 @@
-package com.example.mapchat
+package com.example.mapchat.data.chat
 
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import com.example.mapchat.domain.chat.BluetoothController
-import com.example.mapchat.domain.chat.BluetoothDevice
 import com.example.mapchat.domain.chat.BluetoothDeviceDomain
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
