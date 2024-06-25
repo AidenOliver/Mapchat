@@ -8,13 +8,18 @@ import android.os.Build
 import com.example.mapchat.presentation.components.DeviceScreen
 import android.os.Bundle
 import android.view.Surface
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -23,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,14 +83,51 @@ class MainActivity : ComponentActivity() {
             MapchatTheme {
                 val viewModel = hiltViewModel<BluetoothViewModel>()
                 val state by viewModel.state.collectAsState()
+                
+                LaunchedEffect(key1 = state.errorMessage) {
+                    state.errorMessage?.let {message ->
+                        Toast.makeText(
+                            applicationContext,
+                            message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                
+                LaunchedEffect(key1 = state.isConnected) {
+                    if(state.isConnected) {
+                        Toast.makeText(
+                            applicationContext,
+                            "You're connected",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                
                 Surface (
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DeviceScreen(
-                        state = state,
-                        onStartScan = viewModel::startScan,
-                        onStopScan = viewModel::stopScan
-                    )
+                    when {
+                        state.isConnecting -> {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator()
+                                Text(text = "Connecting...")
+                            }
+                        }
+                        else -> {
+                            DeviceScreen(
+                                state = state,
+                                onStartScan = viewModel::startScan,
+                                onStopScan = viewModel::stopScan,
+                                onDeviceClick = viewModel::connectToDevice,
+                                onStartServer = viewModel::waitForIncomingConnections
+                            )
+                        }
+                    }
                 }
             }
         }
