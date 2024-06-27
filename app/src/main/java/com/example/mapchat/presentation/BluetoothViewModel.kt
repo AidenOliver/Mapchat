@@ -32,7 +32,7 @@ class BluetoothViewModel @Inject constructor(
     ) {scannedDevices, pairedDevices, state ->
         state.copy(
             scannedDevices = scannedDevices,
-            pairedDevices = pairedDevices,
+            pairedDevices = pairedDevices
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
@@ -104,7 +104,7 @@ class BluetoothViewModel @Inject constructor(
                 bluetoothController.closeConnection()
                 _state.update {it.copy(
                     isConnected = false,
-                    isConnecting = false,
+                    isConnecting = false
                 )}
             }
             .launchIn(viewModelScope)
