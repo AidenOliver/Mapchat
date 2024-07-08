@@ -20,3 +20,6 @@ object AppModule {
         return AndroidBluetoothController(context)
     }
 }
+
+// Initialize AndroidBluetoothController instance and provide it to the BluetoothController interface
+// BluetoothViewModel will use this instance to communicate with the Bluetooth device
