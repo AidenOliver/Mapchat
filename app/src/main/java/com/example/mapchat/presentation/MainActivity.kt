@@ -50,10 +50,10 @@ class MainActivity : ComponentActivity() {
     private val isBluetoothEnabled: Boolean
         get() = bluetoothAdapter?.isEnabled == true
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) { // Called when the activity is first created
         super.onCreate(savedInstanceState)
 
-        val enableBluetoothLauncher = registerForActivityResult(
+        val enableBluetoothLauncher = registerForActivityResult( // Register the launcher and result callback
             ActivityResultContracts.StartActivityForResult(),
         ) {}
 
@@ -82,8 +82,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MapchatTheme {
-                val viewModel = hiltViewModel<BluetoothViewModel>()
-                val state by viewModel.state.collectAsState()
+                val viewModel = hiltViewModel<BluetoothViewModel>() // Get the view model
+                val state by viewModel.state.collectAsState() // Collect the state
                 
                 LaunchedEffect(key1 = state.errorMessage) {
                     state.errorMessage?.let {message ->

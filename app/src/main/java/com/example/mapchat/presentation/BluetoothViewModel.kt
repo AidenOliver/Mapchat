@@ -25,8 +25,8 @@ class BluetoothViewModel @Inject constructor(
     private val bluetoothController: BluetoothController
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(BluetoothUiState())
-    val state = combine(
+    private val _state = MutableStateFlow(BluetoothUiState()) // Read-write UI state
+    val state = combine( // Combine mutable UI stateflow with BluetoothController stateflow
         bluetoothController.scannedDevices,
         bluetoothController.pairedDevices,
         _state
@@ -36,11 +36,11 @@ class BluetoothViewModel @Inject constructor(
             pairedDevices = pairedDevices,
             messages = if(state.isConnected) state.messages else emptyList()
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value) // Read-only UI state
 
     private var deviceConnectionJob: Job? = null
 
-    init {
+    init { // Listen to bluetoothController events to update the UI state
         bluetoothController.isConnected.onEach { isConnected ->
             _state.update { it.copy(isConnected = isConnected) }
         }.launchIn(viewModelScope)
@@ -52,14 +52,14 @@ class BluetoothViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun connectToDevice(device: BluetoothDeviceDomain) {
+    fun connectToDevice(device: BluetoothDeviceDomain) { // Update the state, and start a job to connect to the device
         _state.update { it.copy(isConnecting = true) }
         deviceConnectionJob = bluetoothController
             .connectToDevice(device)
             .listen()
     }
 
-    fun disconnectFromDevice() {
+    fun disconnectFromDevice() { // Cancel the device connection job, close the connection, and update the UI state
         deviceConnectionJob?.cancel()
         bluetoothController.closeConnection()
         _state.update { it.copy(
@@ -68,14 +68,14 @@ class BluetoothViewModel @Inject constructor(
         ) }
     }
 
-    fun waitForIncomingConnections() {
+    fun waitForIncomingConnections() { // Update the state, and start a job to listen for incoming connections
         _state.update { it.copy(isConnecting = true) }
         deviceConnectionJob = bluetoothController
             .startBluetoothServer()
             .listen()
     }
 
-    fun sendMessage(message: String) {
+    fun sendMessage(message: String) { // Launch a coroutine to send the message to the device, and update the UI state
         viewModelScope.launch {
             val bluetoothMessage = bluetoothController.trySendMessage(message)
             if (bluetoothMessage != null) {
@@ -94,7 +94,7 @@ class BluetoothViewModel @Inject constructor(
         bluetoothController.stopDiscovery()
     }
 
-    private fun Flow<ConnectionResult>.listen(): Job {
+    private fun Flow<ConnectionResult>.listen(): Job { // Listen for connection events and update the UI state
         return onEach { result ->
             when(result) {
                 ConnectionResult.ConnectionEstablished -> {
@@ -118,17 +118,17 @@ class BluetoothViewModel @Inject constructor(
                 }
             }
         }
-            .catch { throwable ->
+            .catch { throwable -> // Close the connection on exception
                 bluetoothController.closeConnection()
                 _state.update {it.copy(
                     isConnected = false,
                     isConnecting = false,
                 )}
             }
-            .launchIn(viewModelScope)
+            .launchIn(viewModelScope) // Launch the job in the ViewModel scope
     }
 
-    override fun onCleared() {
+    override fun onCleared() { // Release the BluetoothController when the ViewModel is cleared
         super.onCleared()
         bluetoothController.release()
     }
